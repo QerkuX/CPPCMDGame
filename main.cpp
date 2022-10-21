@@ -2,6 +2,7 @@
 #include <iostream>
 #include <conio.h>
 
+
 //define keys
 #define VK_W 0x57
 #define VK_A 0x41
@@ -22,15 +23,24 @@ void ClearScreen()
 char square = 219;
 char player = 190;
 char door = 177;
+char heart = 3;
+char key = 4;
 int doorPosY;
 int doorPosX;
 int playerPosY;
 int playerPosX;
+int playerStartPosY;
+int playerStartPosX;
 char playerSprite = 'p';
 bool jumping = false;
 int jumpHeight = 2;
 int jumpStage = 0;
 int option;
+int lives = 3;
+int allKeys = 0;
+int keys = 0;
+int keyPosY[100];
+int keyPosX[100];
 
 
 
@@ -59,7 +69,7 @@ int main(){
 
         string level;
 
-        cout << "o - air, x - ground, p - player, d - door \n" << endl;
+        cout << "o - air, x - ground, p - player, d - door, k - key \n" << endl;
         for (int i = 0; i < y; i++){
             cin >> level;
             if (level.length() > x){
@@ -112,8 +122,8 @@ int main(){
         char matrixDefault[100][100]=
         {
             {'o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o'},
-            {'o','o','o','o','o','o','o','o','o','o','d','o','o','o','o','o','o','o','o','o'},
-            {'o','o','o','o','o','o','o','o','o','x','x','o','o','o','o','x','x','o','o','o'},
+            {'o','o','o','o','o','o','o','o','o','o','d','o','o','o','o','o','k','o','o','o'},
+            {'o','o','o','k','o','o','o','o','o','x','x','o','o','o','o','x','x','o','o','o'},
             {'o','o','x','x','x','x','o','o','o','o','o','o','o','o','o','o','o','o','x','x'},
             {'p','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','x','x'},
             {'x','x','x','x','x','x','x','x','x','x','x','x','o','o','x','x','x','x','x','x'}
@@ -135,6 +145,12 @@ int main(){
             else if (matrix[i][j] == 'x'){
                 matrix[i][j] = square;
             }
+            else if (matrix[i][j] == 'k'){
+                matrix[i][j] = key;
+                keyPosY[allKeys] = i;
+                keyPosX[allKeys] = j;
+                allKeys++;
+            }
             else if (matrix[i][j] == 'd'){
                 matrix[i][j] = door;
                 doorPosY = i;
@@ -143,6 +159,8 @@ int main(){
             else if (matrix[i][j] == 'p'){
                 playerPosY = i;
                 playerPosX = j;
+                playerStartPosY = i;
+                playerStartPosX = j;
 
                 //This is fix to the bug that accour because when you make a map, you need to use 'd' (door), but the game for some reason think that you pressed 'd' in game,
                 //so it increses playerPos
@@ -200,8 +218,18 @@ int main(){
         //Clear screen
         ClearScreen();
 
+        //Check if got key
+        for (int i = 0; i < allKeys; i++){
+            if(playerPosX == keyPosX[i] && playerPosY == keyPosY[i]){
+                keyPosY[i] = -1;
+                keyPosX[i] = -1;
+                keys++;
+                break;
+            }
+        }
+
         //Check if winned
-        if (playerPosX == doorPosX && playerPosY == doorPosY){
+        if (playerPosX == doorPosX && playerPosY == doorPosY && keys == allKeys){
             system("cls");
             cout << "You winned!\n" << endl;
             system("pause");
@@ -210,19 +238,51 @@ int main(){
 
         //Check if dead
         if (playerPosY > y){
-            system("cls");
-            cout << "You are dead!\n" << endl;
-            system("pause");
-            return 0;
+            lives--;
+            if (lives == 0){
+                system("cls");
+                cout << "You lost!\n" << endl;
+                system("pause");
+                return 0;
+            }
+            matrix[playerStartPosY][playerStartPosX] = 'p';
+            playerPosY = playerStartPosY;
+            playerPosX = playerStartPosX;
+
         }
 
         //Draw map
+
+        cout << heart << "[";
+        for (int i = 0; i < lives; i++){
+            cout << "-";
+        }
+        for (int i = 0; i < 3-lives; i++){
+            cout << " ";
+        }
+
+        cout << "] " << key << "[";
+        for (int i = 0; i < keys; i++){
+            cout << "-";
+        }
+
+
+        for (int i = 0; i < allKeys-keys; i++){
+            cout << " ";
+        }
+
+        cout << "]" << endl;
 		for (int i = 0; i < y; i++){
             for (int j = 0; j < x; j++){
-                cout << matrix[i][j];
+                if ((i == doorPosY && j == doorPosX) && (playerPosY != doorPosY || playerPosX != doorPosX)){
+                    cout << door;
+                }
+                else{
+                    cout << matrix[i][j];
+                }
             }
             cout << endl;
 		}
-		Sleep(100);
+		Sleep(75);
 	}
 }
